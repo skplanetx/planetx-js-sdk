@@ -1,0 +1,60 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>Open Platform Prototype </title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>  
+<script type="text/javascript" src="../planetxsdk-1.0.0.js"></script>
+<script type="text/javascript"> 
+
+	$( function () {  
+		PlanetX.init( {
+			// 본인의 appkey 정보 입력
+			appkey : "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX" , 
+
+			// 본인의 client id 정보 입력
+			client_id : "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",  
+
+			// 본인의 redirect uri 정보 입력
+			redirect_uri : "http://localhost:8080/",                   
+
+			// 앱에서 접근할 수 있는 서비스 리스트
+			scope : "tcloud"   
+		} );
+	});
+	
+	function tcloud ( ) {
+		PlanetX.api( "get", "https://apis.skplanetx.com/tcloud/images","JSON", { "version" :1 }, tcloud_callback );
+	}
+
+	function tcloud_callback ( data ) {
+		var imgElement = document.createElement("img");
+		
+		imgElement.src = data.meta.images.image[0].thumbnailUrl;
+
+		//imgElement.setAttributeNode( imgAttr );
+		
+		$("#tcloud").html( data.meta.images.image[0].name +"<br>");
+		$("#tcloud").append(imgElement);
+	}
+</script>
+</head>
+
+<body>
+	<h1>OAuth 2.0 : Login()</h1>
+	<p>	
+	<button onclick="PlanetX.login()">Get access_token</button>
+	</p>
+
+	<h1> tcloud : api ( ) </h1>
+	<button onclick="tcloud( tcloud_callback )">click image </button>
+	<p id="tcloud">  <p>
+	
+	<h1>logout </h1>
+	<p>
+	<button onclick="PlanetX.logout()">Logout</button>
+	</p>
+
+	
+</body>
+</html>
