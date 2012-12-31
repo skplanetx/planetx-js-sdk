@@ -1,0 +1,64 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>Open Platform Prototype </title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>  
+<script type="text/javascript" src="../planetxsdk-1.0.0.js"></script>
+<script type="text/javascript"> 
+
+	$( function () {  
+		PlanetX.init( {
+			// 본인의 appkey 정보 입력
+			appkey : "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX" , 
+
+			// 본인의 client id 정보 입력
+			client_id : "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",  
+
+			// 본인의 redirect uri 정보 입력
+			redirect_uri : "http://localhost:8080/",                   
+
+			// 앱에서 접근할 수 있는 서비스 리스트
+			scope : "user"   
+		} );
+	});
+	
+	function userprofile() {
+		PlanetX.api( "get", "https://apis.skplanetx.com/users/me/profile", "JSON", { },  userProfile_callback );
+	} 
+	
+	function userProfile_callback( data ) {
+		var titleElement, 
+			resultElement; 
+
+		titleElement = "<h2> userProfile success </h2>" ;
+		resultElement = $("#result1"); 
+
+		for ( var i in data.profile ) {
+			titleElement +=  (i + " : " + data.profile[i] + "<br>") ; 
+		}
+		
+		resultElement.html( titleElement );		
+	}
+</script>
+</head>
+
+<body>
+	<h1>OAuth 2.0 : Login()</h1>
+	<p>	
+	<button onclick="PlanetX.login()">Get access_token</button>
+	</p>
+
+	<h1>SK Plantet One ID : userProfile ( callback )</h1>
+	<p>
+	<button onClick="userprofile()">my profile</button>
+	<div id='result1'></div>
+	</p>
+
+	<h1>logout </h1>
+	<p>
+	<button onclick="PlanetX.logout()">Logout</button>
+	</p>
+	
+</body>
+</html>
