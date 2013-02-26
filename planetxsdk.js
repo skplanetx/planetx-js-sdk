@@ -70,16 +70,21 @@ function ( $ , window, undefined ) {
 				this.login_form.action = "https://oneid.skplanetx.com/oauth/authorize/";
 				this.login_form.method = "get";
 
-				var that = this;
+				var that = this,
+					typeAttr,
+					nameAttr,
+					valueAttr,
+					body_tag = document.getElementsByTagName( "body" )[0];
+
 
 				// making <input> tags and their attributes in <form> tag
 				jQuery.each( [ "client_id", "response_type", "scope", "redirect_uri" ], function (i, name) {
-					var node = document.createElement( "input" );
 
+					node = document.createElement( "input" );
 					// making new attributes
-					var typeAttr = document.createAttribute( "type" );
-					var nameAttr = document.createAttribute( "name" );
-					var valueAttr = document.createAttribute( "value" );
+					typeAttr = document.createAttribute( "type" );
+					nameAttr = document.createAttribute( "name" );
+					valueAttr = document.createAttribute( "value" );
 
 					// setting attribute values
 					typeAttr.value = "hidden";
@@ -95,7 +100,7 @@ function ( $ , window, undefined ) {
 					that.login_form.appendChild( node );
 				} );
 
-				var body_tag = document.getElementsByTagName("body")[0];
+
 				body_tag.appendChild( this.login_form );
 
 				return this.SUCCESS_INIT;
@@ -111,7 +116,6 @@ function ( $ , window, undefined ) {
 		 * @function login
 		 */
 		login : function ( ) {
-			debugger;
 			// if existing <form> tag for log-in
 			if ( this.login_form !== null ) {
 				this.login_form.submit( );
@@ -208,8 +212,8 @@ function ( $ , window, undefined ) {
 		 * @function _saveToken
 		 */
 		_saveToken : function ( token ) {
-        	var current_time = new Date();
-        	this._access_token_time = current_time.getTime() / 1000 ;
+			var current_time = new Date();
+			this._access_token_time = current_time.getTime() / 1000 ;
 
 			// first check localStorage
 			if ( localStorage ){
@@ -248,8 +252,8 @@ function ( $ , window, undefined ) {
 			}
 
 			// token validation check
-        	var current_date = new Date();
-        	current_time = current_date.getTime() / 1000 ;
+			var current_date = new Date();
+			current_time = current_date.getTime() / 1000 ;
 
 			if ( !this._access_token || !this._access_token_time ||	( this._access_token_time_limit - ( current_time - this._access_token_time ) ) < 0 ) {
 				this._clearToken();
@@ -281,29 +285,26 @@ function ( $ , window, undefined ) {
 		 */
 		_checkAccessToken : function () {
 			// get access token from local storage or cookie
-	        this._loadToken( );
+			this._loadToken( );
 
 			// get access token from location.hash , this value has higher priority.
-	        if ( window.location.hash ) {
-	            var hash_str = window.location.hash.substring(1);
-	            var pattern = /^access_token/;
-	            var result = hash_str.match( pattern );
-
-	            if ( result !== null ) {
-	            	this._access_token = window.location.hash.slice( this._access_token_start, this._access_token_end );
-
-	            	this._saveToken( this._access_token );
-
-	            	this._loginStatus = true ;
-	            }
-	        }
+			if ( window.location.hash ) {
+				var hash_str = window.location.hash.substring(1),
+					pattern = /^access_token/,
+					result = hash_str.match( pattern );
+			if ( result !== null ) {
+				this._access_token = window.location.hash.slice( this._access_token_start, this._access_token_end );
+				this._saveToken( this._access_token );
+				this._loginStatus = true ;
+				}
+			}
 		},
 
 		/**
 		 * @function _getAccessToken
 		 */
 		_getAccessToken : function () {
-	        return this._access_token;
+			return this._access_token;
 		},
 
 		/**
@@ -325,6 +326,20 @@ function ( $ , window, undefined ) {
 					success : successCallback,
 					error : failCallback
 				};
+			var ajaxRequest = function( ) {
+				var activexmodes=["Msxml2.XMLHTTP", "Microsoft.XMLHTTP"]; //activeX versions to check for in IE
+				for (var i=0; i<activexmodes.length; i++){
+					try{
+						return new ActiveXObject(activexmodes[i]);
+					}
+					catch(e){
+						//suppress error
+						return null;
+					}
+				}
+			};
+
+			var mygetrequest;
 			// default error handling function
 			if ( !failCallback ) {
 				queryObject.error =  function(jqXHR, textStatus, errorThrown){
@@ -353,14 +368,14 @@ function ( $ , window, undefined ) {
 						xhr.setRequestHeader( "appKey", that._getAppkey( ) );
 					},
 					data : {
-						 "version" : 1
+						"version" : 1
 					},
 					cache : false
 				};
 
 			// public API doesn't have accessToken ...
-			if ( that._getAccessToken() != '' ) {
-				defaultSetting["data"].access_token = that._getAccessToken( );
+			if ( that._getAccessToken() !== '' ) {
+				defaultSetting.data.access_token = that._getAccessToken( );
 			}
 
 			// merging queryObject with defaultSetting object
@@ -372,71 +387,43 @@ function ( $ , window, undefined ) {
 			}
 
 			// Use Microsoft XDR for IE browser
-			if ($.browser.msie) {
-
-
-				function ajaxRequest(){
-				    var activexmodes=["Msxml2.XMLHTTP", "Microsoft.XMLHTTP"]; //activeX versions to check for in IE
-
-				    for (var i=0; i<activexmodes.length; i++){
-				    	try{
-				        	return new ActiveXObject(activexmodes[i]);
-				       	}
-				       	catch(e){
-				        	//suppress error
-				        	return null;
-				       	}
-				    }
+			if ( $.browser.msie ) {
+				mygetrequest = new ajaxRequest();
+				mygetrequest.onreadystatechange = function() {
+					if (mygetrequest.readyState==4){
+						if ( mygetrequest.status === 200 || window.location.href.indexOf( "http" ) === -1 ){
+							if ( !mygetrequest.responseType || mygetrequest.responseType === "JSON" || mygetrequest.responseType == "json" ) {
+								successCallback( jQuery.parseJSON( mygetrequest.responseText ) );
+							} else if ( mygetrequest.responseType === "XML" || mygetrequest.responseType === "xml") {
+								successCallback( jQuery.parseXML( mygetrequest.responseText ) );
+							}
+						} else{
+							failCallback();
+						}
+					}
+				};
+				// get
+				if ( queryMethod == "GET" || queryMethod == "get") {
+					mygetrequest.open( queryMethod, queryURL + "?" + jQuery.param( queryData ), true);
 				}
-
-			    var mygetrequest = new ajaxRequest();
-
-			    mygetrequest.onreadystatechange=function(){
-			     if (mygetrequest.readyState==4){
-			      if (mygetrequest.status==200 || window.location.href.indexOf("http")==-1){
-			    	// alert('success : ' + mygetrequest.response );
-			    	if ( !!mygetrequest.responseType == false || mygetrequest.responseType == "JSON" || mygetrequest.responseType == "json" )
-				    	successCallback( jQuery.parseJSON( mygetrequest.responseText ) );
-				    else if ( mygetrequest.responseType == "XML" || mygetrequest.responseType == "xml")
-				    	successCallback( jQuery.parseXML( mygetrequest.responseText ) );
-			      }
-			      else{
-			    	// alert("An error has occured making the request");
-			    	failCallback();
-			      }
-			     }
-			    }
-
-			    // get
-			    if ( queryMethod == "GET" || queryMethod == "get")
-			    	mygetrequest.open( queryMethod, queryURL + "?" + jQuery.param( queryData ), true);
-
-			    // post
-			    else if ( queryMethod == "POST" || queryMethod == "post")
-			    	mygetrequest.open( queryMethod, queryURL , true);
-
-
-			    mygetrequest.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-			    mygetrequest.setRequestHeader('appkey', that._getAppkey() );
-
-			    // get
-			    if ( queryMethod == "GET" || queryMethod == "get")
-			    	mygetrequest.send(null);
 				// post
-			    else if ( queryMethod == "POST" || queryMethod == "post")
-			    	mygetrequest.send( jQuery.param( queryData ) );
-			}
-
-
-			// other browsers except IE browser ...
-			else {
+				else if ( queryMethod == "POST" || queryMethod == "post") {
+					mygetrequest.open( queryMethod, queryURL , true);
+				}
+				mygetrequest.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+				mygetrequest.setRequestHeader('appkey', that._getAppkey() );
+				// get
+				if ( queryMethod == "GET" || queryMethod == "get") {
+					mygetrequest.send(null);
+				} else if ( queryMethod == "POST" || queryMethod == "post") { // post
+					mygetrequest.send( jQuery.param( queryData ) );
+				}
+			} else { // other browsers except IE browser ...
 				$.ajax( queryObject );
 			}
-
-	 		return this.SUCCESS_API;
-
-		}
-	} ; // end of prototype
+			return this.SUCCESS_API;
+		} //end api
+	}; // end of prototype
 
 	// assign PlanetX object to window object
 	window.PlanetX = new PlanetX( );
