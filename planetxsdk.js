@@ -67,7 +67,7 @@ function ( $ , window, undefined ) {
 
 				// making new <form> tag
 				this.login_form = document.createElement( "form" );
-				this.login_form.action = "https://oneid.skplanetx.com/oauth/authorize/";
+				this.login_form.action = "https://oneid.skplanetx.com/oauth/authorize";
 				this.login_form.method = "get";
 
 				var that = this,
