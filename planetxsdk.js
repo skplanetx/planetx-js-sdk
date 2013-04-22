@@ -327,15 +327,21 @@ function ( $ , window, undefined ) {
 					error : failCallback
 				};
 			var ajaxRequest = function( ) {
+
 				var activexmodes=["Msxml2.XMLHTTP", "Microsoft.XMLHTTP"]; //activeX versions to check for in IE
-				for (var i=0; i<activexmodes.length; i++){
-					try{
-						return new ActiveXObject(activexmodes[i]);
+
+				if ( window.XMLHttpRequest === undefined ) {
+					for (var i=0; i<activexmodes.length; i++){
+						try{
+							return new ActiveXObject(activexmodes[i]);
+						}
+						catch(e){
+							//suppress error
+							return null;
+						}
 					}
-					catch(e){
-						//suppress error
-						return null;
-					}
+				} else {
+					return new XMLHttpRequest();
 				}
 			};
 
