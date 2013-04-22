@@ -50,6 +50,7 @@ function ( $ , window, undefined ) {
 		ERROR_LOGOUT : -102 ,
 
 		ERROR_PARAMETER_MISSING : -201 ,
+		ERROR_API : -202,
 
 		/**
 		 * @function init
@@ -330,18 +331,15 @@ function ( $ , window, undefined ) {
 
 				var activexmodes=["Msxml2.XMLHTTP", "Microsoft.XMLHTTP"]; //activeX versions to check for in IE
 
-				if ( window.XMLHttpRequest === undefined ) {
-					for (var i=0; i<activexmodes.length; i++){
-						try{
-							return new ActiveXObject(activexmodes[i]);
-						}
-						catch(e){
-							//suppress error
-							return null;
-						}
+
+				for (var i=0; i<activexmodes.length; i++){
+					try{
+						return new ActiveXObject(activexmodes[i]);
 					}
-				} else {
-					return new XMLHttpRequest();
+					catch(e){
+						//suppress error
+						return null;
+					}
 				}
 			};
 
@@ -395,6 +393,12 @@ function ( $ , window, undefined ) {
 			// Use Microsoft XDR for IE browser
 			if ( $.browser.msie ) {
 				mygetrequest = new ajaxRequest();
+
+				if ( mygetrequest == null ) {
+					alert("This browser Does not support Ajax.")
+					return ERROR_API;
+				}
+
 				mygetrequest.onreadystatechange = function() {
 					if (mygetrequest.readyState==4){
 						if ( mygetrequest.status === 200 || window.location.href.indexOf( "http" ) === -1 ){
@@ -410,10 +414,12 @@ function ( $ , window, undefined ) {
 				};
 				// get
 				if ( queryMethod == "GET" || queryMethod == "get") {
+					console.log( queryMethod + " : " + queryURL + "?" + jQuery.param( queryData ) );
 					mygetrequest.open( queryMethod, queryURL + "?" + jQuery.param( queryData ), true);
 				}
 				// post
 				else if ( queryMethod == "POST" || queryMethod == "post") {
+					console.log( queryMethod + " : " + queryURL + "?" + jQuery.param( queryData ) );
 					mygetrequest.open( queryMethod, queryURL , true);
 				}
 				mygetrequest.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
