@@ -10,6 +10,7 @@
 function ( $ , window, undefined ) {
 	var PlanetX = function( ) {
 		// you can configure these variables using PlanetX.init() function
+		this.isIE = (/MSIE/i).test( navigator.userAgent );
 		this.appkey = "" ;
 
 		// <form> tag id for OAuth 2.0 request
@@ -50,7 +51,6 @@ function ( $ , window, undefined ) {
 		ERROR_LOGOUT : -102 ,
 
 		ERROR_PARAMETER_MISSING : -201 ,
-		ERROR_API : -202,
 
 		/**
 		 * @function init
@@ -328,10 +328,7 @@ function ( $ , window, undefined ) {
 					error : failCallback
 				};
 			var ajaxRequest = function( ) {
-
 				var activexmodes=["Msxml2.XMLHTTP", "Microsoft.XMLHTTP"]; //activeX versions to check for in IE
-
-
 				for (var i=0; i<activexmodes.length; i++){
 					try{
 						return new ActiveXObject(activexmodes[i]);
@@ -347,18 +344,21 @@ function ( $ , window, undefined ) {
 			// default error handling function
 			if ( !failCallback ) {
 				queryObject.error =  function(jqXHR, textStatus, errorThrown){
-					if (jqXHR.status == "0") {
+					if ( this.isIE ){
+						alert("Ajax fail callback is called");
+					}
+					if (jqXHR.status === "0") {
 						alert("jqXHR.status 0: Network Problem");
-					} else if (jqXHR.status == "401") {
+					} else if (jqXHR.status === "401") {
 						alert("jqXHR.status 401: Unauthorized");
 						// location.href = "https://developers.skplanetx.com/login/";
-					} else if (jqXHR.status == "403") {
+					} else if (jqXHR.status === "403") {
 						alert("jqXHR.status 403: Forbidden");
-					} else if (jqXHR.status == "404") {
+					} else if (jqXHR.status === "404") {
 						alert("jqXHR.status 404: Not Found");
-					} else if (jqXHR.status == "412") {
+					} else if (jqXHR.status === "412") {
 						alert("jqXHR.status 412: Precondition Failed ");
-					} else if (jqXHR.status == "500") {
+					} else if (jqXHR.status === "500") {
 						alert("jqXHR.status 500: Internal Server Error ");
 					} else {
 						alert("jqXHR.status " + jqXHR.status );
@@ -391,14 +391,8 @@ function ( $ , window, undefined ) {
 			}
 
 			// Use Microsoft XDR for IE browser
-			if ( $.browser.msie ) {
+			if ( this.isIE ) {
 				mygetrequest = new ajaxRequest();
-
-				if ( mygetrequest == null ) {
-					alert("This browser Does not support Ajax.")
-					return ERROR_API;
-				}
-
 				mygetrequest.onreadystatechange = function() {
 					if (mygetrequest.readyState==4){
 						if ( mygetrequest.status === 200 || window.location.href.indexOf( "http" ) === -1 ){
@@ -408,26 +402,26 @@ function ( $ , window, undefined ) {
 								successCallback( jQuery.parseXML( mygetrequest.responseText ) );
 							}
 						} else{
-							failCallback();
+							if ( failCallback ) {
+								failCallback();
+							}
 						}
 					}
 				};
 				// get
-				if ( queryMethod == "GET" || queryMethod == "get") {
-					console.log( queryMethod + " : " + queryURL + "?" + jQuery.param( queryData ) );
+				if ( queryMethod === "GET" || queryMethod === "get") {
 					mygetrequest.open( queryMethod, queryURL + "?" + jQuery.param( queryData ), true);
 				}
 				// post
-				else if ( queryMethod == "POST" || queryMethod == "post") {
-					console.log( queryMethod + " : " + queryURL + "?" + jQuery.param( queryData ) );
+				else if ( queryMethod === "POST" || queryMethod === "post") {
 					mygetrequest.open( queryMethod, queryURL , true);
 				}
 				mygetrequest.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 				mygetrequest.setRequestHeader('appkey', that._getAppkey() );
 				// get
-				if ( queryMethod == "GET" || queryMethod == "get") {
+				if ( queryMethod === "GET" || queryMethod === "get") {
 					mygetrequest.send(null);
-				} else if ( queryMethod == "POST" || queryMethod == "post") { // post
+				} else if ( queryMethod === "POST" || queryMethod === "post") { // post
 					mygetrequest.send( jQuery.param( queryData ) );
 				}
 			} else { // other browsers except IE browser ...

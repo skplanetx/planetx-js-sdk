@@ -1,28 +1,286 @@
-<!--This html file is junghyuhan debuging html file :  based on example.html: 
-  diff code  PlanetX.init{ appkey, client_id , scope, redirect_uri}-->
+<!DOCTYPE HTML>
 <html>
 <head>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-<title>PlanetX Javascript SDK </title>
+<title>SKPlanetX JavaScript SDK Example</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+<link rel="stylesheet" href="http://code.jquery.com/mobile/1.3.0/jquery.mobile-1.3.0.css"/>
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.8.0.js"></script>
+<script type="text/javascript" src="http://code.jquery.com/mobile/1.3.0/jquery.mobile-1.3.0.js"></script>
+<script type="text/javascript" src="../planetxsdk.js"></script>
+<script type="text/javascript">
+	// This script should be changed to your application information by using PlanetX APPkey generation website
+	// https://developers.skplanetx.com/develop/app
+	$( function () {
+		PlanetX.init( {
+			appkey : "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+			client_id : "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+			scope : "user, cyworld, nate, nateon, tcloud",
+			redirect_uri : "http://127.0.0.1/examples/app.html"
+		} );
+	});
+
+	function userprofile() {
+		PlanetX.api( "get", "https://apis.skplanetx.com/users/me/profile", "JSON", { },  userProfile_callback );
+	}
+
+	function userProfile_callback( data ) {
+		var titleElement,
+			resultElement;
+
+		titleElement = "<h2> userProfile success </h2>" ;
+		resultElement = $("#profile");
+
+		for ( var i in data.profile ) {
+			titleElement +=  (i + " : " + data.profile[i] + "<br>") ;
+		}
+
+		resultElement.html( titleElement );
+	}
+
+	function loginStatus () {
+		var status;
+		status = PlanetX.getLoginStatus();
+		$("#status2").html( "Login Status :" + status );
+	}
+
+	window.onload = function ( ) {
+		var status = PlanetX.getLoginStatus();
+		$("#status1").html("Login Status : " + status );
+	};
+
+	function cyworld() {
+		PlanetX.api( "get", "https://apis.skplanetx.com/cyworld/minihome/me", "JSON", { "version" : 1 },  cyworld_callback );
+	}
+
+	function cyworld_callback ( data ) {
+		var titleElement,
+			resultElement;
+
+		titleElement = "<h2> cyworld success </h2>" ;
+		resultElement = $("#cyworld");
+
+		for ( var i in data.miniHome ) {
+			titleElement +=  (i + " : " + data.miniHome[i] + "<br>") ;
+		}
+
+		resultElement.html( titleElement );
+	}
+
+	function photoView ( ) {
+		PlanetX.api( "get", "https://apis.skplanetx.com/cyworld/minihome/me/albums/0/items","JSON",{
+			"version" : 1
+		}, photoView_callback  );
+	}
+
+	function photoView_callback ( data ) {
+		var imgElement1 = document.createElement( "img" ),
+			imgElement2 = document.createElement( "img" );
+
+			imgElement1.src = data.items.item[0].photoVmUrl;
+			imgElement1.width = 400;
+
+			imgElement2.src = data.items.item[1].photoVmUrl;
+			imgElement2.width = 400;
+
+			$("#photo1").html( "Date: "+ data.items.item[0].writeDate + "<br>" );
+			$("#photo1").append( imgElement1 );
+			$("#photo2").html( "Date: "+ data.items.item[1].writeDate + "<br>");
+			$("#photo2").append( imgElement2 );
+
+	}
+
+	function sendmail() {
+		var email = document.forms[0].email.value,
+			to = document.forms[0].to.value ,
+			cc = document.forms[0].cc.value ,
+			bcc = document.forms[0].bcc.value ,
+			subject = document.forms[0].subject.value ,
+			body = document.forms[0].content.value ;
+
+		var data = {
+			"email" : email,
+			"to" : to,
+			"cc" : cc,
+			"bcc" : bcc,
+			"subject" : subject,
+			"body" : body
+		};
+
+		PlanetX.api( "post", "https://apis.skplanetx.com/nate/mail", "JSON", data, mail_callback );
+
+	}
+
+	function mail_callback () {
+		var today = new Date();
+		$("#mail").html( ": <h2> mail success... </h2>" + today.toUTCString() );
+	}
+
+	function nateon() {
+		PlanetX.api( "get", "https://apis.skplanetx.com/nateon/profile", "JSON", { "version" : 1 }, nateon_callback );
+	}
+
+	function nateon_callback ( data ) {
+		var titleElement,
+			resultElement;
+
+		titleElement = "<h2> cyworld success </h2>" ;
+		resultElement = $("#nateon");
+
+		for ( var i in data.profile ) {
+			titleElement +=  (i + " : " + data.profile[i] + "<br>") ;
+		}
+
+		resultElement.html( titleElement );
+	}
+
+	function tcloud ( ) {
+		PlanetX.api( "get", "https://apis.skplanetx.com/tcloud/images","JSON", { "version" :1 }, tcloud_callback );
+	}
+
+	function tcloud_callback ( data ) {
+		var imgElement = document.createElement("img");
+
+		imgElement.src = data.meta.images.image[0].thumbnailUrl;
+
+		//imgElement.setAttributeNode( imgAttr );
+
+		$("#tcloud").html( data.meta.images.image[0].name +"<br>");
+		$("#tcloud").append(imgElement);
+	}
+
+	function melon () {
+		PlanetX.api( "get", "http://apis.skplanetx.com/melon/melondj", "JSON", { "version" : 1 }, melon_callback );
+	}
+
+	function melon_callback ( data ) {
+		var titleElement,
+			resultElement,
+			playList;
+
+
+		titleElement = "<h2> melon success </h2>" ;
+		resultElement = $("#melon");
+		playList = data.melon.categories.category;
+
+		for ( var i= 0 ; i < playList.length ; i++  ) {
+			titleElement +=  "<img src=\"" + playList[1].categoryImagePath + "\" > " + playList[i].categoryName + "<br>";
+		}
+
+		resultElement.html( titleElement );
+	}
+
+	function search_11st () {
+		var keyword = document.forms[1].keyword.value;
+
+		PlanetX.api( "get", "http://apis.skplanetx.com/11st/common/products", "JSON", { "searchKeyword" : keyword }, search_11st_callback );
+	}
+
+	function search_11st_callback ( data ) {
+
+		var titleElement,
+			resultElement;
+
+		titleElement = "<h2> 11st success </h2>" ;
+		resultElement = $("#11st");
+		productList = data.ProductSearchResponse.Products.Product;
+
+		for ( var i= 0 ; i < productList.length ; i++  ) {
+			titleElement +=  productList[1].ProductCode + " : " + productList[i].ProductName + "<br>";
+		}
+
+		resultElement.html( titleElement );
+	}
+
+</script>
 </head>
 
 <body>
-	<h1>PlanetX Javascript SDK Test Examples</h1>
-	<a href="user.html">SK Planet One ID Test Example</a>
-	<p></p>
-	<a href="cyworld.html">Cyworld Test Example</a>
-	<p></p>
-	<a href="nateon.html">NateOn Test Example</a>
-	<p></p>
-	<a href="mail.html">Nate(mail) Test Example</a>
-	<p></p>
-	<a href="11st.html">11st Test Example</a>
-	<p></p>
-	<a href="melon.html">Melon Test Example</a>
-	<p></p>
-	<a href="tcloud.html">T cloud Test Example</a>
-	<p></p>
+	<div data-role="page">
+	<div data-role="header" data-theme="a">
+		<h1>PlanetX JS SDK</h1>
+	</div>
+	<div data-role="content">
+		<div>원활한 테스트를 위해 SK planet One ID 를 사용하는 다음 서비스들에 가입되어있어야 합니다.</div>
+		<div>해당 서비스들 : Cyworld, Nate, Nateon, Tcloud</div>
+		<h1>OAuth 2.0 : Login()</h1>
+		<p>
+		<div id="status1"></div>
+		<p></p>
+		<input type="button" onclick="PlanetX.login()" value="Login"></p>
+		</p>
+
+		<h1>SK plantet One ID : userProfile </h1>
+		<p>
+		<input type="button" onClick="userprofile()" value="Show user information">
+		<div id="profile"></div>
+		</p>
+
+		<h1> Login Status </h1>
+		<p>
+		<input type="button" onclick="loginStatus()" value="Show Login Status">
+		<div id="status2"></div>
+		</p>
+		<h1>Cyworld : api ( )</h1>
+		<p>
+		<input type="button" onClick="cyworld( cyworld_callback )" value="Show Cyworld info">
+		<div id='cyworld'></div>
+		</p>
+		<h1>Cyworld : photoView api</h1>
+		<p>
+		<input type="button" onClick="photoView( photoView_callback )" value="Show Cyworld Photo">
+		<div id='photo1'></div>
+		</p>
+		<div id='photo2'></div>
+		</p>
+		<h1>nateMail ( email, to, cc, bcc, subject, body, callback)</h1>
+		<p>
+		<form id="email">
+			<label for="email">From: </label>
+			<input type="text" id="email" name="email" value="kazikai@nate.com">
+			<label for="to">To: </label>
+			<input type="text" id="to" name="to" value="kazikai84@gmail.com">
+			<input type="text" id="cc" name="cc" value="" placeholder="CC">
+			<input type="text" id="bcc" name="bcc" value="" placeholder="BCC">
+			<label for="subject">내용 </label>
+			<input type="text" id="subject" name="subject" value="[subjext]test" placeholder="[subjext]test">
+			<input type="text" id="content" name="content" value="This is the message." placeholder="This is the message.">
+		</form>
+
+		<input type="button" onclick="sendmail()" value="send mail">
+		<div id='mail'></div>
+		</p>
+		<h1>nateOn : api ( )</h1>
+		<p>
+		<input type="button" onClick="nateon( nateon_callback )" value="Show Nateon info">
+		<div id='nateon'></div>
+		</p>
+		<h1> tcloud : api ( ) </h1>
+		<input type="button" onclick="tcloud( tcloud_callback )" value="Show Tcloud latest image">
+		<p id="tcloud">  <p>
+		<h1>melon : api ( ) </h1>
+		<p>
+		<input type="button" onclick="melon()" value="Show melon category">
+		<div id='melon'></div>
+		</p>
+		<h1>11st : api ( ) </h1>
+		<p>
+		<form id="search11">
+		<input type="text" name="keyword" value="sk">
+		</form>
+		<input type="button" onclick="search_11st()" value="Show 11st search">
+		<div id='11st'></div>
+		</p>
+		<h1>logout </h1>
+		<p>
+		<input type="button" onclick="PlanetX.logout()" value="Logout">
+		</p>
+	</div><!--End of content-->
+	<div data-role="footer">
+		<h2>Powered by SK planet</h2>
+	</div>
+	</div><!--End of page-->
 </body>
 </html>
-
