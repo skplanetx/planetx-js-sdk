@@ -19,7 +19,7 @@
 	</div>
 	<div data-role="content">
 		<div>원활한 테스트를 위해 SK planet One ID 를 사용하는 다음 서비스들에 가입되어있어야 합니다.</div>
-		<div>해당 서비스들 : Cyworld, Nate, Nateon, Tcloud</div>
+		<div>해당 서비스들 : Tcloud, Melon, 11st </div>
 		<h1>OAuth 2.0 : Login()</h1>
 		<div id="status1"></div>
 		<input type="button" onclick="PlanetX.login()" value="Login">
@@ -29,30 +29,6 @@
 		<h1> Login Status </h1>
 		<input type="button" onclick="loginStatus()" value="Show Login Status">
 		<div id="status2"></div>
-		<h1>Cyworld : api ( )</h1>
-		<input type="button" onclick="cyworld( cyworld_callback )" value="Show Cyworld info">
-		<div id='cyworld'></div>
-		<h1>Cyworld : photoView api</h1>
-		<input type="button" onclick="photoView( photoView_callback )" value="Show Cyworld Photo">
-		<div id='photo1'></div>
-		<div id='photo2'></div>
-		<h1>nateMail ( email, to, cc, bcc, subject, body, callback)</h1>
-		<form id="email">
-			<label for="email">From: </label>
-			<input type="text" id="email" name="email" value="kazikai@nate.com">
-			<label for="to">To: </label>
-			<input type="text" id="to" name="to" value="kazikai84@gmail.com">
-			<input type="text" id="cc" name="cc" value="" placeholder="CC">
-			<input type="text" id="bcc" name="bcc" value="" placeholder="BCC">
-			<label for="subject">내용 </label>
-			<input type="text" id="subject" name="subject" value="[subjext]test" placeholder="[subjext]test">
-			<input type="text" id="content" name="content" value="This is the message." placeholder="This is the message.">
-		</form>
-		<input type="button" onclick="sendmail()" value="send mail">
-		<div id='mail'></div>
-		<h1>nateOn : api ( )</h1>
-		<input type="button" onclick="nateon( nateon_callback )" value="Show Nateon info">
-		<div id='nateon'></div>
 		<h1> tcloud : api ( ) </h1>
 		<input type="button" onclick="tcloud( tcloud_callback )" value="Show Tcloud latest image">
 		<div id="tcloud"></div>
@@ -66,7 +42,7 @@
 		<input type="button" onclick="search_11st()" value="Show 11st search">
 		<div id='11st'></div>
 		<h1>logout </h1>
-		<input type="button" onclick="PlanetX.logout()" value="Logout">
+		<input type="button" onclick="logout()" value="Logout">
 	</div><!--End of content-->
 	<div data-role="footer" data-position="fixed">
 		<h2>Powered by SK planet</h2>

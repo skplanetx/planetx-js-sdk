@@ -10,8 +10,13 @@ $(function (){
         appkey : "",
         client_id : "",
         scope : "",
-        redirect_uri : ""
+        redirect_uri : "",
+        // if true, token is saved cookie or localstorage
+        savingToken : true
     });
+
+    var status = PlanetX.getLoginStatus();
+    $("#status1").html("Login Status : " + status );
 });
 
 function userProfileCallback( data ) {
@@ -33,75 +38,6 @@ function loginStatus () {
     var status;
     status = PlanetX.getLoginStatus();
     $("#status2").html( "Login Status :" + status );
-}
-window.onload = function ( ) {
-    var status = PlanetX.getLoginStatus();
-    $("#status1").html("Login Status : " + status );
-};
-function cyworld() {
-    PlanetX.api( "get", "https://apis.skplanetx.com/cyworld/minihome/me", "JSON", { "version" : 1 },  cyworld_callback );
-}
-function cyworld_callback ( data ) {
-    var titleEl,
-        $targetEl;
-    titleEl = "<h2> cyworld success </h2>" ;
-    $targetEl = $("#cyworld");
-    for ( var i in data.miniHome ) {
-        titleEl +=  (i + " : " + data.miniHome[i] + "<br>") ;
-    }
-    $targetEl.html( titleEl );
-}
-function photoView ( ) {
-    PlanetX.api( "get", "https://apis.skplanetx.com/cyworld/minihome/me/albums/0/items","JSON",{
-        "version": 1
-    }, photoView_callback  );
-}
-function photoView_callback ( data ) {
-    var imgElement1 = document.createElement( "img" ),
-        imgElement2 = document.createElement( "img" );
-    imgElement1.src = data.items.item[0].photoVmUrl;
-    imgElement1.width = 400;
-    imgElement2.src = data.items.item[1].photoVmUrl;
-    imgElement2.width = 400;
-    $("#photo1").html( "Date: "+ data.items.item[0].writeDate + "<br>" );
-    $("#photo1").append( imgElement1 );
-    $("#photo2").html( "Date: "+ data.items.item[1].writeDate + "<br>");
-    $("#photo2").append( imgElement2 );
-}
-function sendmail() {
-    var formEl = document.getElementById( "email" ),
-        email = formEl.email.value,
-        to = formEl.to.value,
-        cc = formEl.cc.value,
-        bcc = formEl.bcc.value,
-        subject = formEl.subject.value,
-        body = formEl.content.value;
-    var data = {
-        "email" : email,
-        "to" : to,
-        "cc" : cc,
-        "bcc" : bcc,
-        "subject" : subject,
-        "body" : body
-    };
-    PlanetX.api( "post", "https://apis.skplanetx.com/nate/mail", "JSON", data, mail_callback );
-}
-function mail_callback () {
-    var today = new Date();
-    $("#mail").html( ": <h2> mail success... </h2>" + today.toUTCString() );
-}
-function nateon() {
-    PlanetX.api( "get", "https://apis.skplanetx.com/nateon/profile", "JSON", { "version" : 1 }, nateon_callback );
-}
-function nateon_callback ( data ) {
-    var titleEl,
-        $targetEl;
-    titleEl = "<h2> cyworld success </h2>" ;
-    $targetEl = $("#nateon");
-    for ( var i in data.profile ) {
-        titleEl +=  (i + " : " + data.profile[i] + "<br>") ;
-    }
-    $targetEl.html( titleEl );
 }
 function tcloud ( ) {
     PlanetX.api( "get", "https://apis.skplanetx.com/tcloud/images","JSON", { "version" :1 }, tcloud_callback );
@@ -142,4 +78,9 @@ function search_11st_callback ( data ) {
         titleEl +=  productList[1].ProductCode + " : " + productList[i].ProductName + "<br>";
     }
     $targetEl.html( titleEl );
+}
+function logout() {
+    PlanetX.logout( function() {
+        window.location.reload();
+    });
 }

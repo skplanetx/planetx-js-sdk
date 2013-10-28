@@ -10,7 +10,7 @@
  * @name planetxsdk
  * @namespace skp.openplatformconnector.planetxsdk
  * @description planet X JavaScript SDK
- * @version 1.0
+ * @version 1.1
  * @author Kwak Nohyun (nhkwak@sk.com) , Junghyun Han (junghyun.han@sk.com)
  */
 function ( $, window, undefined ) {
@@ -25,6 +25,9 @@ function ( $, window, undefined ) {
         this.response_type = "token";
         this.scope = "";
         this.redirect_uri = "";
+        // saving token in cookie or localstorage
+        // default is true
+        this.savingToken = true;
         // access token
         this._access_token = "";
         this._access_token_start = 14;
@@ -39,7 +42,7 @@ function ( $, window, undefined ) {
     // prototype
     PlanetX.prototype = {
         // System information
-        versionNumber: '1.0.0',
+        versionNumber: '1.1.0',
         // Return code
         SUCCESS_INIT: 100,
         SUCCESS_LOGIN: 101,
@@ -53,13 +56,15 @@ function ( $, window, undefined ) {
          * @function init
          */
         init: function ( obj ) {
-            // first call
+
             var i,
                 that = this,
                 typeAttr,
                 nameAttr,
                 valueAttr,
                 body = doc.getElementsByTagName( "body" )[0];
+
+            // first call
             if ( this.login_form === null ){
                 // initializing with object parameter
                 if ( !! obj ) {
@@ -91,7 +96,9 @@ function ( $, window, undefined ) {
                 });
                 body.appendChild( this.login_form );
                 return this.SUCCESS_INIT;
-            } else { // can't call twice
+            }
+            // can't call twice
+            else {
                 return this.ERROR_INIT;
             }
         },
@@ -110,50 +117,65 @@ function ( $, window, undefined ) {
         /**
          * @function logout
          */
-        logout: function ( ) {
+        logout: function ( successCB, failCB ) {
+
+            if ( this.getLoginStatus() === false ) {
+                return this.ERROR_LOGOUT;
+            }
+
             // ajax JSONP call for invalidating access_token
             $.ajax( {
                 beforeSend: function(xhr) {
                     xhr.setRequestHeader( "appKey", this._getAppkey( ) );
                 },
                 type: "get",
-                url: "https://oneid.skplanetx.com/oauth/expireToken",
+                url: "https://oneid.skplanetx.com/oauth/expireToken_jsonp",
                 data:  {
                     "client_id": this.client_id,
                     "token": this._getAccessToken( )
                 },
                 dataType: "jsonp",
                 context: this,
-                callback: "this.logoutCallback",
-                success: function ( data ) {
+                callback: "this.logoutCallback"
+            }).done( function ( data ) {
+                if ( data.app.result === "success") {
                     this._clearToken();
+                    this._loginStatus = false;
+                    window.location.hash = '';
+                    if ( typeof successCB === 'function') {
+                        successCB();
+                    }
                     return this.SUCCESS_LOGOUT;
-                },
-                error: function(jqXHR, textStatus, errorThrown){
-                    // exeption handling for sever-side not supporting JSONP
-                    if (jqXHR.status === 200 ) {
-                        this._clearToken();
-                        return this.SUCCESS_LOGOUT;
-                    }
-                    // error handling
-                    if (jqXHR.status === 0) {
-                        alert("error 0: Network Problem");
-                    } else if (jqXHR.status === 401) {
-                        alert("error 401: Unauthorized");
-                        location.href = "https://developers.skplanetx.com/login/";
-                    } else if (jqXHR.status === 403) {
-                        alert("error 403: Forbidden");
-                    } else if (jqXHR.status === 404) {
-                        alert("error 404: Not Found");
-                    } else if (jqXHR.status === 412) {
-                        alert("error 412: Precondition Failed ");
-                    } else if (jqXHR.status === 500) {
-                        alert("error 500: Internal Server Error");
-                    } else {
-                        alert("error " + jqXHR.status );
-                    }
+                }
+                else {
+                    alert( 'response for the logout-request is not success');
                     return this.ERROR_LOGOUT;
                 }
+            }).fail( function(jqXHR, textStatus, errorThrown){
+
+                // error handling
+                if (jqXHR.status === 0) {
+                    alert("error 0: Network Problem");
+                } else if (jqXHR.status === 401) {
+                    alert("error 401: Unauthorized");
+                    location.href = "https://developers.skplanetx.com/login/";
+                } else if (jqXHR.status === 403) {
+                    alert("error 403: Forbidden");
+                } else if (jqXHR.status === 404) {
+                    alert("error 404: Not Found");
+                } else if (jqXHR.status === 406) {
+                    alert("error 406: Not acceptable");
+                } else if (jqXHR.status === 412) {
+                    alert("error 412: Precondition Failed ");
+                } else if (jqXHR.status === 500) {
+                    alert("error 500: Internal Server Error");
+                } else {
+                    alert("error " + jqXHR.status );
+                }
+                if ( typeof failCB === 'function') {
+                    failCB();
+                }
+                return this.ERROR_LOGOUT;
             });
         },
         /**
@@ -184,13 +206,21 @@ function ( $, window, undefined ) {
          * @function _saveToken
          */
         _saveToken: function ( token ) {
+            // when you don't want to save token in cookie or localstorage
+            // ex) one page application
+            if ( this.savingToken === false ) {
+                return;
+            }
+
             var current_time = new Date();
             this._access_token_time = current_time.getTime() / 1000 ;
             // first check window.localStorage
             if ( window.localStorage ){
                 localStorage.setItem ( "token", token );
                 localStorage.setItem ( "tokentime", this._access_token_time );
-            } else { // second check cookie
+            }
+            // second check cookie
+            else {
                 doc.cookie += ("token=" + token + ";" ) ;
                 doc.cookie += ( "tokentime="  + this._access_token_time + ";" ) ;
             }
@@ -200,12 +230,21 @@ function ( $, window, undefined ) {
          * @function _loadToken
          */
         _loadToken: function ( ){
+
+            // when you don't want to save token in cookie or localstorage
+            // ex) one page application
+            if ( this.savingToken === false ) {
+                return;
+            }
+
             // first check window.localStorage
             if ( window.localStorage ){
                 this._access_token = localStorage.getItem( "token" );
                 this._access_token_time = localStorage.getItem( "tokentime" );
 
-            } else { // second check cookie
+            }
+            // second check cookie
+            else {
                 var cookieArray = doc.cookie.split( ";" );
                 for ( var i in cookieArray ) {
                     if ( cookieArray[i].match( "token=" ) ) {
@@ -215,10 +254,11 @@ function ( $, window, undefined ) {
                     }
                 }
             }
+
             // token validation check
             var current_date = new Date();
             current_time = current_date.getTime() / 1000 ;
-            if ( !this._access_token || !this._access_token_time ||	( this._access_token_time_limit - ( current_time - this._access_token_time ) ) < 0 ) {
+            if ( !this._access_token || !this._access_token_time || ( this._access_token_time_limit - ( current_time - this._access_token_time ) ) < 0 ) {
                 this._clearToken();
                 this._loginStatus = false;
             } else if ( !!this._access_token && !!this._access_token_time ) {
@@ -229,14 +269,24 @@ function ( $, window, undefined ) {
          * @function _clearToken
          */
         _clearToken: function () {
+            this._access_token = "";
+            this._access_token_time = "";
+
+            // when you don't want to save token in cookie or localstorage
+            // ex) one page application
+            if ( this.savingToken === false ) {
+                return;
+            }
+
+            // first remove window.localStorage
             if ( window.localStorage ) {
                 localStorage.removeItem( "token" );
                 localStorage.removeItem( "tokentime" );
-            } else {
+            }
+            // second check cookie
+            else {
                 this._saveToken( "" );
             }
-            this._access_token = "";
-            this._access_token_time = "";
         },
         /**
          * @function _checkAccessToken
@@ -281,6 +331,7 @@ function ( $, window, undefined ) {
                     error: failCallback
                 };
             var ajaxRequest = function( ) {
+                //activeX versions to check for in IE
                 var activeXModes=["Msxml2.XMLHTTP", "Microsoft.XMLHTTP"]; //activeX versions to check for in IE
                 for ( var i = 0, max = activeXModes.length; i < max; i += 1 ){
                     try{
@@ -307,6 +358,8 @@ function ( $, window, undefined ) {
                         alert("jqXHR.status 403: Forbidden");
                     } else if (jqXHR.status === 404) {
                         alert("jqXHR.status 404: Not Found");
+                    } else if (jqXHR.status === 406) {
+                        alert("jqXHR.status 406: Not Acceptable");
                     } else if (jqXHR.status === 412) {
                         alert("jqXHR.status 412: Precondition Failed ");
                     } else if (jqXHR.status === 500) {
@@ -342,7 +395,7 @@ function ( $, window, undefined ) {
                 myGetRequest.onreadystatechange = function() {
                     if (myGetRequest.readyState === 4){
                         if ( myGetRequest.status === 200 || window.location.href.indexOf( "http" ) === -1 ){
-                            if ( !myGetRequest.responseType || myGetRequest.responseType === "JSON" || myGetRequest.responseType == "json" ) {
+                            if ( !myGetRequest.responseType || myGetRequest.responseType === "JSON" || myGetRequest.responseType === "json" ) {
                                 successCallback( jQuery.parseJSON( myGetRequest.responseText ) );
                             } else if ( myGetRequest.responseType === "XML" || myGetRequest.responseType === "xml" ) {
                                 successCallback( jQuery.parseXML( myGetRequest.responseText ) );
